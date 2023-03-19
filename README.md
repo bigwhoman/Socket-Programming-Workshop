@@ -228,7 +228,8 @@ Got connection from ('127.0.0.1', 38465)
 got message from client : ack
 got message from client : hello world
 ```
-Now the problem is that this connection is blocking and the can't simultaniously listen and answer to multiple connection. This is the part where asyncio comes in place.
+# Async Connection Handling
+Now the problem is that the previous connection is blocking and the server can't simultaniously listen and answer to multiple connections. This is the part where asyncio comes in place.
 
 ### async_server.py
 ```python
