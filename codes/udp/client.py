@@ -1,8 +1,8 @@
 import asyncio
 import asyncudp
-
+port = 12345
 async def run_client():
-    sock = await asyncudp.create_socket(remote_addr=("127.0.0.1", 12345))
+    sock = await asyncudp.create_socket(remote_addr=("127.0.0.1", port))
     for _ in range(10):
         sock.sendto(b'get')
         print("set the get message")

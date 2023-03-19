@@ -1,5 +1,5 @@
 import asyncio
-
+port = 12345
 class CounterUDPServer:
     def __init__(self):
         self.counter = 0
@@ -16,7 +16,7 @@ class CounterUDPServer:
 
     def datagram_received(self, data, addr):
         print(f"got {data.decode()} from {addr}")
-        if data.decode() != "get":
+        if data.decode().strip() != "get":
             return
         loop = asyncio.get_event_loop()
         loop.create_task(self.send_counter(addr))
@@ -25,9 +25,9 @@ async def run_server():
     loop = asyncio.get_running_loop()
     await loop.create_datagram_endpoint(
         lambda: CounterUDPServer(),
-        local_addr=('127.0.0.1', 12345)
+        local_addr=('127.0.0.1', port)
     )
-    print(f"Listening on 127.0.0.1:12345")
+    print(f"Listening on 127.0.0.1:{port}")
     while True:
         await asyncio.sleep(3600)
 

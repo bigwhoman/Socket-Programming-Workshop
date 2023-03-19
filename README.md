@@ -285,3 +285,85 @@ got message
 hello world
 got message from server : got message
 ```
+# UDP Socket
+So far we have only used tcp sockets, what if we want to communicate with a udp socket ?<br>
+The challenging part is that the server does not know the source which the packets come from.
+### server
+```python
+import asyncio
+port = 12345
+class CounterUDPServer:
+    def __init__(self):
+        self.counter = 0
+
+    async def send_counter(self, addr):
+        self.counter += 1
+        next_value = self.counter
+        await asyncio.sleep(0.5)
+        print(f"sending {next_value} to {addr}")
+        self.transport.sendto(str(next_value).encode(), addr)
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def datagram_received(self, data, addr):
+        print(f"got {data.decode()} from {addr}")
+        if data.decode() != "get":
+            return
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.send_counter(addr))
+
+async def run_server():
+    loop = asyncio.get_running_loop()
+    await loop.create_datagram_endpoint(
+        lambda: CounterUDPServer(),
+        local_addr=('127.0.0.1', port)
+    )
+    print(f"Listening on 127.0.0.1:{port}")
+    while True:
+        await asyncio.sleep(3600)
+
+asyncio.run(run_server())
+```
+### client
+```python
+import asyncio
+import asyncudp
+port = 12345
+async def run_client():
+    sock = await asyncudp.create_socket(remote_addr=("127.0.0.1", port))
+    for _ in range(10):
+        sock.sendto(b'get')
+        print("set the get message")
+        data, addr = await sock.recvfrom()
+        print(f"got {data.decode()} from {addr}")
+        await asyncio.sleep(0.5)
+    sock.close()
+
+asyncio.run(run_client())
+```
+# Appendix
+### socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+creates a socket with two parameters : (1) Protocol - (2) Socket Type
+### AF_INET     
+Address Family = IPv4
+### SOCK_STREAM 
+The type of socket is tcp stream
+### socket.bind(('', port)) 
+Bind socket to the port of every address
+### socket.accept
+Waits for a connection to establish and then returns the connection and address of connection<br>
+### socket.listen(num)
+Puts the socket into listening mode<br>
+### socket.setblocking(False)
+Makes the socket non-blocking (as expected)<br>
+### asyncio.get_event_loop()
+Creates an event loop which can then run async tasks<br>
+### loop.create_task(self.send_counter(addr))
+Runs an async task<br>
+### asyncio.run(run_client())
+Like create task but mostly used for the main function<br>
+### loop.sock_sendall(connection,'message'.encode())
+Sends message through a socket <br>
+### await loop.create_datagram_endpoint( lambda: CounterUDPServer(),local_addr=('127.0.0.1', port))
+Creates an endpoint and listens to it
